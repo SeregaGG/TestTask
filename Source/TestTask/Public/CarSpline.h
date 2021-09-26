@@ -79,8 +79,13 @@ public:
 	UPROPERTY(BlueprintReadWrite)
 		float CurrentSpeed = 50;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bDrawDebug = false;
+	
 	float CurrentDistance = 0.f;
 
 	bool bStopLight = false;
 	int bOnCrossroad = 0;
+	bool bTestOnCrossroad = false;
+	
 };

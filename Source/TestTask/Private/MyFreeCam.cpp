@@ -50,7 +50,7 @@ void AMyFreeCam::BeginPlay()
 	CurrentPitch =  GetActorForwardVector().Rotation().Pitch;
 	
 	ObserverLocation = GetActorLocation();
-	ObserverRotation = GetActorRotation();
+	ObserverRotation = GetController()->GetControlRotation();
 	MaxCameraPitch = -MaxCameraPitch;
 	/*if(Cast<AMyFreeCamController>(GetController())->bShowMouseCursor)
 		DisableInput(Cast<APlayerController>(GetController()));*/
@@ -92,7 +92,7 @@ void AMyFreeCam::GoToObserverLocation()
 		TargetBuilding->TriggerBox->SetCollisionProfileName(TEXT("BlockAll"));
 		TargetBuilding->BuildingMesh->SetCollisionProfileName(TEXT("BlockAll"));
 	}
-	SetActorRotation(ObserverRotation);
+	GetController()->SetControlRotation(ObserverRotation);
 	SetActorLocation(ObserverLocation);
 	
 	CameraBoom->TargetArmLength = 0;
@@ -126,14 +126,15 @@ void AMyFreeCam::BuildingClick()
 
 void AMyFreeCam::MouseZoom(float Value)
 {
-	if(bResearch && !BuildCheck())
+	if(bResearch && CameraBoom->TargetArmLength)
 	{
-		CameraBoom->TargetArmLength-= (Value * ZoomSense);
-	}
-
-	if(BuildCheck() && Value < 0)
-	{
-		CameraBoom->TargetArmLength-= (Value * ZoomSense);
+		if(FVector::DistXY(FollowCamera->GetComponentLocation(), TargetBuilding->GetActorLocation()) > MinSpringLength && Value > 0)
+		{
+			CameraBoom->TargetArmLength-= (Value * ZoomSense);
+			
+		}
+		else if(Value < 0)
+			CameraBoom->TargetArmLength-= (Value * ZoomSense);
 	}
 }
 
@@ -142,16 +143,20 @@ void AMyFreeCam::LookUp(float Value)
 {
 	if(bResearch)
 	{
-
-		if(BuildCheck() && Value>0)
-			return;
-		
 		if((GetActorRotation().Pitch + Value) > MaxCameraPitch)
-			AddControllerPitchInput(-Value);
+		{
+			if(FVector::DistXY(FollowCamera->GetComponentLocation(), TargetBuilding->GetActorLocation()) > MinSpringLength && Value > 0)
+				AddControllerPitchInput(-Value);
+			else if(Value<0)
+				AddControllerPitchInput(-Value);
+		}
+		else
+			GetController()->SetControlRotation(FRotator(MaxCameraPitch, GetActorRotation().Yaw,GetActorRotation().Roll));
+		
 		return;
 	}
 	
-	if((bActiveFreeMode || bResearch))
+	if(bActiveFreeMode)
 	{
 		AddControllerPitchInput(-Value);
 	}
@@ -177,7 +182,12 @@ bool AMyFreeCam::BuildCheck()
 
 void AMyFreeCam::Turn(float Value)
 {
-	if((bActiveFreeMode || bResearch) && !BuildCheck())
+	if(bResearch && FVector::DistXY(FollowCamera->GetComponentLocation(), TargetBuilding->GetActorLocation()) > MinSpringLength)
+	{
+		AddControllerYawInput(Value);
+	}
+
+	if(bActiveFreeMode)
 	{
 		AddControllerYawInput(Value);
 	}

@@ -60,10 +60,13 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void BuildingClick();
-
+	
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 		float ZoomSense = 30;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
+		float MinSpringLength = 500;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Camera)
 		float CameraSpeed = 1;

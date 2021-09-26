@@ -30,8 +30,7 @@ ACarSpline::ACarSpline()
 void ACarSpline::BeginPlay()
 {
 	Super::BeginPlay();
-	
-	TriggerBox->OnComponentHit.AddDynamic(this,&ACarSpline::OnHit);
+	//TriggerBox->OnComponentHit.AddDynamic(this,&ACarSpline::OnHit);
 	TriggerBox->OnComponentBeginOverlap.AddDynamic(this,  &ACarSpline::OnOverlapBegin);
 	TriggerBox->OnComponentEndOverlap.AddDynamic(this, &ACarSpline::OnOverlapEnd);
 	if(BeginPlayCarMesh)
@@ -62,8 +61,9 @@ void ACarSpline::Tick(float DeltaTime)
 			return;
 		}
 	}
-	
-	if(CurrentStopLine && !bOnCrossroad)
+	if(bDrawDebug)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bTestOnCrossroad));
+	if(CurrentStopLine && !bTestOnCrossroad)
 	{
 		if(CurrentStopLine->GetName() == "FirstRoadStart" || CurrentStopLine->GetName() == "FirstRoadEnd")
 		{
@@ -108,20 +108,25 @@ void ACarSpline::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimit
 
 void ACarSpline::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if(!Cast<ACarSpline>(OtherActor))
+	if(Cast<ATrafficLights>(OtherActor))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bOnCrossroad));
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::FromInt(MyVar));
 		bOnCrossroad++;
+		bTestOnCrossroad = true;
 	}
 }
 
 void ACarSpline::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
-	if(!Cast<ACarSpline>(OtherActor))
+	if(Cast<ATrafficLights>(OtherActor))
 	{
 		bOnCrossroad++;
+		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bTestOnCrossroad));
 		if(bOnCrossroad == 4)
+		{
 			bOnCrossroad = 0;
+			bTestOnCrossroad = false;
+		}
 	}
 }
 
