@@ -47,9 +47,6 @@ public:
 		void SpawnSpline();
 
 	UFUNCTION()
-		void dsa();
-
-	UFUNCTION()
 		void CarRiding();
 
 	UFUNCTION()
@@ -57,7 +54,16 @@ public:
 
 	UFUNCTION()
 		void DoCarStop();
+	
+	UFUNCTION()
+		FHitResult HitActorBeforeYou(float traceLen);
 
+	UFUNCTION()
+		void SeeOtherCar(ACarSpline* OtherCar);
+
+	UFUNCTION()
+		void SeeTL(UBoxComponent* CurrentStopLine);
+	
 	UFUNCTION()
 	void OnOverlapEnd(class UPrimitiveComponent* OverlappedComp, class AActor* OtherActor, class UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 

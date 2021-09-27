@@ -43,62 +43,60 @@ void ACarSpline::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 	
 	CarRiding();
-
-	FHitResult OutHit;
-	FVector TraceStart = GetActorLocation();
-	FVector TraceEnd = TraceStart + GetActorForwardVector() * 150;
-	FCollisionQueryParams CollisionQueryParams;
-	CollisionQueryParams.AddIgnoredActor(this);
-	bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
-	UBoxComponent* CurrentStopLine = Cast<UBoxComponent>(OutHit.GetComponent());
-	ACarSpline* OtherCar = Cast<ACarSpline>(OutHit.GetActor());
+	
+	UBoxComponent* CurrentStopLine = Cast<UBoxComponent>(HitActorBeforeYou(300).GetComponent());
+	ACarSpline* OtherCar = Cast<ACarSpline>(HitActorBeforeYou(300).GetActor());
 
 	if(OtherCar)
 	{
-		if(OtherCar->CurrentSpeed < CurrentSpeed)
-		{
-			DoCarStop();
-			return;
-		}
+		SeeOtherCar(OtherCar);
+		return;
 	}
+	
 	if(bDrawDebug)
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bOnCrossroad));
+	
 	if(CurrentStopLine && !bOnCrossroad)
 	{
-		if(CurrentStopLine->GetName() == "FirstRoadStart" || CurrentStopLine->GetName() == "FirstRoadEnd")
-		{
-			ATrafficLights* CurrentTL = Cast<ATrafficLights>(CurrentStopLine->GetOwner());
-			bStopLight = !CurrentTL->bCanDriveFirst;
-		}
-		else if(CurrentStopLine->GetName() == "SecondRoadStart" || CurrentStopLine->GetName() == "SecondRoadEnd")
-		{
-			ATrafficLights* CurrentTL = Cast<ATrafficLights>(CurrentStopLine->GetOwner());
-			bStopLight = !CurrentTL->bCanDriveSecond;
-		}
-	}
-
-
-	
-	
-	if(!bStopLight)
-	{
-		if(CurrentSpeed < MaxSpeed)
-			DoCarAcceleration();
-	}
-	else
-	{
-		if(CurrentSpeed > 0)
-		{
-			DoCarStop();
-		}
+		SeeTL(CurrentStopLine);
 	}
 }
 
-
-void ACarSpline::dsa()
+void ACarSpline::SeeTL(UBoxComponent* CurrentStopLine)
 {
-	
+	if(CurrentStopLine->GetName() == "FirstRoadStart" || CurrentStopLine->GetName() == "FirstRoadEnd")
+	{
+		ATrafficLights* CurrentTL = Cast<ATrafficLights>(CurrentStopLine->GetOwner());
+		bStopLight = !CurrentTL->bCanDriveFirst;
+	}
+	else if(CurrentStopLine->GetName() == "SecondRoadStart" || CurrentStopLine->GetName() == "SecondRoadEnd")
+	{
+		ATrafficLights* CurrentTL = Cast<ATrafficLights>(CurrentStopLine->GetOwner());
+		bStopLight = !CurrentTL->bCanDriveSecond;
+	}
 }
+
+
+void ACarSpline::SeeOtherCar(ACarSpline* OtherCar)
+{
+	if(OtherCar->CurrentSpeed < CurrentSpeed)
+	{
+		DoCarStop();
+	}
+}
+
+
+FHitResult ACarSpline::HitActorBeforeYou(float traceLen)
+{
+	FHitResult OutHit;
+	FVector TraceStart = GetActorLocation();
+	FVector TraceEnd = TraceStart + GetActorForwardVector() * traceLen;
+	FCollisionQueryParams CollisionQueryParams;
+	CollisionQueryParams.AddIgnoredActor(this);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(OutHit, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionQueryParams);
+	return OutHit;
+}
+
 
 void ACarSpline::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
@@ -150,6 +148,19 @@ void ACarSpline::CarRiding()
 {
 	if(SplineActorRoad)
 	{
+		if(!bStopLight)
+		{
+			if(CurrentSpeed < MaxSpeed)
+				DoCarAcceleration();
+		}
+		else
+		{
+			if(CurrentSpeed > 0)
+			{
+				DoCarStop();
+			}
+		}
+		
 		CurrentDistance += CurrentSpeed * GetWorld()->GetDeltaSeconds();
 	
 		FVector NewLocation = SplineActorRoad->CarSplineRoad->GetLocationAtDistanceAlongSpline(CurrentDistance, ESplineCoordinateSpace::World);
