@@ -86,6 +86,5 @@ public:
 
 	bool bStopLight = false;
 	int bOnCrossroad = 0;
-	bool bTestOnCrossroad = false;
 	
 };

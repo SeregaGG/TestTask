@@ -62,8 +62,8 @@ void ACarSpline::Tick(float DeltaTime)
 		}
 	}
 	if(bDrawDebug)
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bTestOnCrossroad));
-	if(CurrentStopLine && !bTestOnCrossroad)
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bOnCrossroad));
+	if(CurrentStopLine && !bOnCrossroad)
 	{
 		if(CurrentStopLine->GetName() == "FirstRoadStart" || CurrentStopLine->GetName() == "FirstRoadEnd")
 		{
@@ -110,9 +110,7 @@ void ACarSpline::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* Oth
 {
 	if(Cast<ATrafficLights>(OtherActor))
 	{
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, FString::FromInt(MyVar));
 		bOnCrossroad++;
-		bTestOnCrossroad = true;
 	}
 }
 
@@ -121,11 +119,9 @@ void ACarSpline::OnOverlapEnd(UPrimitiveComponent* OverlappedComp, AActor* Other
 	if(Cast<ATrafficLights>(OtherActor))
 	{
 		bOnCrossroad++;
-		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Green, FString::FromInt(bTestOnCrossroad));
 		if(bOnCrossroad == 4)
 		{
 			bOnCrossroad = 0;
-			bTestOnCrossroad = false;
 		}
 	}
 }
