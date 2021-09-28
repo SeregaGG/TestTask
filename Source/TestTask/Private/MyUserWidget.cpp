@@ -64,13 +64,31 @@ void UMyUserWidget::ResearchClicked()
 	{
 		TempMyFreeCam->TargetBuilding->TriggerBox->SetCollisionProfileName(TEXT("SpringArmCollision"));
 		TempMyFreeCam->TargetBuilding->BuildingMesh->SetCollisionProfileName(TEXT("SpringArmCollision"));
-		TempMyFreeCam->SetActorLocation(TempMyFreeCam->TargetBuilding->GetActorLocation());
-		TempMyFreeCam->CameraBoom->TargetArmLength = 1000;
+		FLatentActionInfo ActionInfo;
+		ActionInfo.CallbackTarget = this;
+		FVector CamDirection = (TempMyFreeCam->TargetBuilding->GetActorLocation() - TempMyFreeCam->TargetBuilding->GlobalTargetLocation);
+		UKismetSystemLibrary::MoveComponentTo(TempMyFreeCam->GetRootComponent(),TempMyFreeCam->TargetBuilding->GlobalTargetLocation,CamDirection.Rotation(),false, false, 3.f,true,EMoveComponentAction::Move, ActionInfo);
+		FTimerHandle FlyTimer;
+		GetWorld()->GetTimerManager().SetTimer(FlyTimer, this, &UMyUserWidget::SetResearchParams, 3.f, false);
+		/*TempMyFreeCam->SetActorLocation(TempMyFreeCam->TargetBuilding->GetActorLocation());
+		TempMyFreeCam->CameraBoom->TargetArmLength = CamDirection.Size();
 		TempMyFreeCam->bResearch = true;
-		TempMyFreeCam->bActiveFreeMode = false;
+		TempMyFreeCam->bActiveFreeMode = false;*/
 		//GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, CapsuleComponent->GetComponentLocation().ToString());
 	}
 }
+
+void UMyUserWidget::SetResearchParams()
+{
+	AMyFreeCam* TempMyFreeCam = Cast<AMyFreeCam>(GetOwningPlayerPawn());
+	TempMyFreeCam->SetActorLocation(TempMyFreeCam->TargetBuilding->GetActorLocation());
+	FVector CamDirection = (TempMyFreeCam->TargetBuilding->GetActorLocation() - TempMyFreeCam->TargetBuilding->GlobalTargetLocation);
+	TempMyFreeCam->CameraBoom->TargetArmLength = CamDirection.Size();
+	TempMyFreeCam->GetController()->SetControlRotation(CamDirection.Rotation());
+	TempMyFreeCam->bResearch = true;
+	TempMyFreeCam->bActiveFreeMode = false;
+}
+
 
 void UMyUserWidget::ZoomClicked()
 {

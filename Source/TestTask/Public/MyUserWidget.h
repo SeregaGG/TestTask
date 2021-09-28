@@ -65,5 +65,8 @@ class TESTTASK_API UMyUserWidget : public UUserWidget
 	
 	UFUNCTION()
 		void ChangingParams(float Value);
+
+	UFUNCTION()
+		void SetResearchParams();
 	
 };
